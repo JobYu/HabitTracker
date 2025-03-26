@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habit Tracker</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 id="appTitle">Habit Tracker</h1>
+            <div class="header-controls">
+                <div class="view-controls">
+                    <button data-view="week" class="active" id="weekViewBtn">Week</button>
+                    <button data-view="month" id="monthViewBtn">Month</button>
+                    <button data-view="year" id="yearViewBtn">Year</button>
+                    <button id="exportBtn">Export</button>
+                </div>
+                <div class="language-selector">
+                    <button id="langEn" class="lang-btn active">EN</button>
+                    <button id="langZh" class="lang-btn">中文</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="calendar-container">
+            <div class="navigation-controls">
+                <button id="prevBtn">Previous</button>
+                <div class="view-title" id="viewTitle">
+                    <!-- 视图标题将由JavaScript动态生成 -->
+                </div>
+                <button id="nextBtn">Next</button>
+            </div>
+            
+            <div class="calendar-header">
+                <span></span> <!-- 空白格子用于对齐习惯名称列 -->
+                <span class="date-header">
+                    <div class="date"></div>
+                    <div class="weekday"></div>
+                </span>
+                <span class="date-header">
+                    <div class="date"></div>
+                    <div class="weekday"></div>
+                </span>
+                <span class="date-header">
+                    <div class="date"></div>
+                    <div class="weekday"></div>
+                </span>
+                <span class="date-header">
+                    <div class="date"></div>
+                    <div class="weekday"></div>
+                </span>
+                <span class="date-header">
+                    <div class="date"></div>
+                    <div class="weekday"></div>
+                </span>
+                <span class="date-header">
+                    <div class="date"></div>
+                    <div class="weekday"></div>
+                </span>
+                <span class="date-header">
+                    <div class="date"></div>
+                    <div class="weekday"></div>
+                </span>
+                <!-- 为年视图添加额外的月份列 -->
+                <span class="month-header"></span>
+                <span class="month-header"></span>
+                <span class="month-header"></span>
+                <span class="month-header"></span>
+                <span class="month-header"></span>
+                <span class="month-header"></span>
+                <span class="month-header"></span>
+                <span class="month-header"></span>
+                <span class="month-header"></span>
+                <span class="month-header"></span>
+                <span class="month-header"></span>
+                <span class="month-header"></span>
+            </div>
+            
+            <div class="habit-grid" id="habitGrid">
+                <!-- 习惯列表和日期格子将由JavaScript动态生成 -->
+            </div>
+
+            <div class="add-habit">
+                <form id="addHabitForm">
+                    <input type="text" id="habitName" placeholder="Enter new habit name" required>
+                    <button type="submit" id="addHabitBtn">Add Habit</button>
+                </form>
+            </div>
+        </div>
+        
+        <footer class="footer">
+            <div id="copyright" class="copyright">© PixelBear 32@32comic.com</div>
+        </footer>
+    </div>
+
+    <!-- 提醒对话框 -->
+    <div id="streakDialog" class="dialog-overlay" style="display: none;">
+        <div class="dialog-content">
+            <div id="streakMessage" class="dialog-message"></div>
+            <div class="dialog-buttons">
+                <button id="streakConfirmBtn" class="dialog-btn">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="js/lang.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
