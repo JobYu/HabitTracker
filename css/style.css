@@ -632,9 +632,9 @@ header h1 {
         border-radius: 4px;
     }
 
-    /* 手機設備上已完成的格子顯示為綠色 */
+    /* 手機設備上已完成的格子顯示為藍色 */
     .habit-cell.completed {
-        background-color: #2ecc71;
+        background-color: #0066cc;
     }
 
     .date-number {
