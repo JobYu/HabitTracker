@@ -2,7 +2,7 @@
 
 A minimal, elegant habit tracking application for building consistent daily habits and tracking your progress over time.
 
-![Habit Tracker](./screenshots/screen.png)
+![Habit Tracker](./screenshots/screen.jpeg)
 
 ## Features
 
