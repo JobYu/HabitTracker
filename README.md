@@ -20,7 +20,7 @@ A minimal, elegant habit tracking application for building consistent daily habi
 
 ### Online Demo
 
-Visit [https://jobyu.github.io/HabitTracker/](https://jobyu.github.io/HabitTracker/) to use the application directly in your browser.
+Visit [https://habitdiary.vercel.app/](https://habitdiary.vercel.app/) to use the application directly in your browser.
 
 ### Local Installation
 
