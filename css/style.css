@@ -125,49 +125,46 @@ header h1 {
 /* 日曆頭部 */
 .calendar-header {
     display: grid;
-    grid-template-columns: 200px repeat(7, 1fr);
+    grid-template-columns: 200px repeat(7, 48px);
     margin-bottom: 15px;
     overflow-x: auto;
+    gap: 4px;
 }
 
 .calendar-header span {
     padding: 10px;
     text-align: center;
     color: #aaa;
+    display: none; /* 隱藏星期標題 */
 }
 
-.date-header .date {
-    font-size: 1.1em;
-    color: #ddd;
+.calendar-header span:first-child {
+    display: block; /* 顯示第一個空白格子 */
 }
 
+/* 移除日期和星期顯示 */
+.date-header .date,
 .date-header .weekday {
-    font-size: 0.9em;
-    color: #999;
+    display: none;
 }
 
-/* 習慣列表和日期格子 */
-.habit-grid {
+/* 習慣行基本樣式 */
+.habit-row {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    margin-bottom: 16px;
 }
 
-.habit-row {
-    display: grid;
-    grid-template-columns: 200px repeat(7, 1fr);
-    align-items: center;
-    min-height: 50px;
-}
-
+/* 習慣名稱容器 */
 .habit-name-container {
-    padding: 10px;
+    padding: 8px 12px;
+    background-color: #2a2a2a;
+    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background-color: #2a2a2a;
-    border-radius: 4px 0 0 4px;
-    height: 100%;
+    margin-bottom: 6px;
+    width: 100%;
 }
 
 .habit-name-text {
@@ -176,78 +173,87 @@ header h1 {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 130px;
-    display: flex;
-    align-items: center;
+    max-width: 80%;
 }
 
-.edit-btn {
-    background-color: transparent;
-    color: #999;
-    border: none;
-    cursor: pointer;
-    font-size: 0.8em;
-    padding: 4px 8px;
-    border-radius: 3px;
-    transition: all 0.2s;
+/* 日期格子容器 */
+.habit-cells-container {
+    display: grid;
+    width: 100%;
+    gap: 6px;
 }
 
-.edit-btn:hover {
-    background-color: #3a3a3a;
-    color: #ccc;
+/* 調整週視圖和月視圖的格子容器 */
+.week-view .habit-cells-container {
+    grid-template-columns: repeat(7, 1fr);
 }
 
+.month-view .habit-cells-container {
+    grid-template-columns: repeat(15, 1fr);
+}
+
+/* 日期格子統一樣式 */
 .habit-cell {
     background-color: #333;
     border-radius: 4px;
-    height: 40px;
-    margin: 5px;
+    height: 48px;
+    width: auto;
+    margin: 0;
     cursor: pointer;
     transition: all 0.2s;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
+    min-width: 48px;
+}
+
+/* 當前日期的特殊樣式 */
+.habit-cell.today {
+    box-shadow: 0 0 0 2px #2ecc71;
 }
 
 .habit-cell:hover {
     transform: scale(1.05);
-    background-color: #3a3a3a;
+    background-color: #444;
 }
 
 .habit-cell.completed {
     background-color: #06c;
 }
 
-.habit-cell.not-completed {
-    background-color: #333;
-}
-
 /* 月視圖樣式 */
 .calendar-header.month-view {
-    grid-template-columns: 200px repeat(7, 1fr);
+    grid-template-columns: 200px repeat(15, 1fr);
 }
 
 .habit-row.month-view {
-    grid-template-columns: 200px repeat(7, 1fr);
+    grid-template-columns: 200px repeat(15, 1fr);
 }
 
-.month-view .habit-name-container {
-    grid-row: span 1;
+.month-view .habit-cell {
+    width: auto;
+    height: 48px;
 }
 
-.date-number {
-    position: absolute;
-    top: 2px;
-    left: 5px;
-    font-size: 0.7em;
-    color: #aaa;
+.month-view .habit-cells-container {
+    display: grid;
+    grid-template-columns: repeat(15, 1fr);
+    gap: 6px;
+    width: 100%;
+}
+
+.habit-cells-container {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    width: 100%;
 }
 
 /* 年視圖樣式 */
 .calendar-header.year-view {
     display: grid;
-    grid-template-columns: 200px repeat(12, 1fr);
+    grid-template-columns: 200px 1fr;
     overflow: hidden;
     border-bottom: 1px solid #444;
     padding-bottom: 8px;
@@ -255,50 +261,41 @@ header h1 {
 }
 
 .habit-row.year-view {
-    display: grid;
-    grid-template-columns: 200px repeat(12, 1fr);
+    display: flex;
+    flex-direction: column;
     border-bottom: 1px solid #333;
     padding: 10px 0;
 }
 
-/* 月份容器 */
-.month-container {
-    position: relative;
-    padding: 5px;
-    border-left: 1px dashed #444;
-    min-height: 40px;
+/* 年視圖的日期網格 */
+.year-days-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 8px;
+    background-color: #2a2a2a;
+    border-radius: 6px;
 }
 
-/* 日期網格 */
-.days-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 1px;
-}
-
-/* 月份標題 */
-.month-header {
-    text-align: center;
-    padding: 5px 0;
-    font-size: 1em;
-}
-
-.month-name {
-    font-weight: bold;
-    font-size: 14px;
-    color: #ddd;
-    padding: 5px 0;
-    border-bottom: 1px dashed #444;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* 年視圖中的習慣單元格 */
+/* 年視圖中的習慣格子 */
 .year-view .habit-cell {
-    width: auto;
-    height: 6px;
+    width: 12px;
+    height: 12px;
+    flex: 0 0 12px;
     margin: 1px;
+    border-radius: 2px;
+    padding: 0;
+}
+
+/* 年視圖中當前日期的特殊樣式 */
+.year-view .habit-cell.today {
+    box-shadow: 0 0 0 2px #2ecc71;
+}
+
+/* 隱藏年視圖中的月份名稱 */
+.month-header,
+.month-name {
+    display: none;
 }
 
 /* 未來日期樣式 */
@@ -578,84 +575,15 @@ header h1 {
         padding: 6px 10px;
         font-size: 0.9em;
     }
-    
-    .calendar-header {
-        grid-template-columns: 120px repeat(7, 1fr);
-        font-size: 0.8em;
-        overflow-x: auto;
+
+    /* 平板設備上的月視圖格子 */
+    .month-view .habit-cells-container {
+        grid-template-columns: repeat(10, 1fr);
     }
-    
-    .habit-row {
-        grid-template-columns: 120px repeat(7, 1fr);
-    }
-    
-    .habit-name-text {
-        max-width: 80px;
-        font-size: 0.9em;
-    }
-    
-    .edit-btn {
-        padding: 2px 5px;
-        font-size: 0.75em;
-    }
-    
-    .habit-cell {
-        height: 35px;
-        margin: 2px;
-    }
-    
-    .calendar-header.year-view,
-    .habit-row.year-view {
-        grid-template-columns: 120px repeat(12, 1fr);
-        overflow-x: auto;
-        min-width: 800px;
-    }
-    
-    .month-name {
-        font-size: 0.7em;
-        padding: 2px 0;
-    }
-    
-    .days-grid {
-        gap: 0;
-    }
-    
-    .year-view .habit-cell {
-        height: 4px;
-        margin: 0.5px;
-    }
-    
-    .month-container {
+
+    /* 平板設備上的年視圖 */
+    .year-days-grid {
         padding: 3px;
-    }
-    
-    /* 添加横向滾動容器 */
-    .calendar-container {
-        overflow-x: auto;
-    }
-    
-    /* 表單適配 */
-    .add-habit form {
-        flex-direction: column;
-    }
-    
-    .add-habit button {
-        width: 100%;
-    }
-    
-    /* 對話框適配 */
-    .dialog-content {
-        padding: 20px;
-        max-width: 90%;
-    }
-    
-    .dialog-message {
-        font-size: 1em;
-    }
-    
-    .dialog-btn {
-        padding: 8px 15px;
-        font-size: 0.9em;
     }
 }
 
@@ -669,37 +597,71 @@ header h1 {
         padding: 6px 8px;
         font-size: 0.8em;
     }
-    
+
+    /* 重新設置日曆佈局 */
     .calendar-header {
-        grid-template-columns: 100px repeat(7, 1fr);
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+        padding: 4px;
+        overflow-x: hidden;
     }
-    
+
+    .calendar-header span {
+        display: none; /* 隱藏所有星期標題 */
+    }
+
+    /* 習慣行佈局 */
     .habit-row {
-        grid-template-columns: 100px repeat(7, 1fr);
+        margin-bottom: 20px;
+        border-bottom: 1px solid #444;
+        padding-bottom: 10px;
     }
-    
-    .habit-name-text {
-        max-width: 60px;
-        font-size: 0.8em;
+
+    .habit-cells-container {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+        padding: 4px;
     }
-    
+
     .habit-cell {
-        height: 30px;
-        margin: 1px;
+        width: auto;
+        height: 48px;
+        margin: 0;
+        border-radius: 4px;
     }
-    
-    .streak-indicator {
-        font-size: 0.65em;
-        padding: 1px 4px;
-        margin-left: 4px;
+
+    /* 手機設備上已完成的格子顯示為綠色 */
+    .habit-cell.completed {
+        background-color: #2ecc71;
     }
-    
-    .form-buttons {
-        flex-direction: column;
-        gap: 10px;
+
+    .date-number {
+        top: 2px;
+        left: 2px;
+        font-size: 0.7em;
     }
-    
-    .form-buttons button {
-        width: 100%;
+
+    /* 移動設備上的年視圖 */
+    .year-days-grid {
+        padding: 2px;
     }
+}
+
+/* 日期格子中的日期數字 */
+.date-number {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    font-size: 0.75em;
+    color: #aaa;
+    z-index: 1;
+}
+
+/* 日期網格 - 通用樣式 */
+.days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
 } 

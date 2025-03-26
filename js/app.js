@@ -502,39 +502,15 @@ class CalendarView {
                 dates.push(date);
             }
         } else if (this.currentView === 'month') {
-            // 月視圖：顯示當前月份的所有週
-            const startDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
-            const lastDay = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 0).getDate();
+            // 月視圖：顯示當前月份的日期，按每行9個格子排列
+            const year = this.currentDate.getFullYear();
+            const month = this.currentDate.getMonth();
+            const lastDay = new Date(year, month + 1, 0).getDate();
             
-            // 獲取本月第一天是星期幾
-            const firstDayWeekday = startDate.getDay();
-            
-            // 添加上個月的日期以填充第一週
-            const lastMonthLastDay = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 0).getDate();
-            for (let i = firstDayWeekday - 1; i >= 0; i--) {
-                const date = new Date(startDate);
-                date.setDate(0); // 設置為上個月最後一天
-                date.setDate(lastMonthLastDay - i);
-                dates.push(date);
-            }
-            
-            // 添加當月的所有日期
+            // 添加所有當月的日期
             for (let i = 1; i <= lastDay; i++) {
-                const date = new Date(startDate);
-                date.setDate(i);
+                const date = new Date(year, month, i);
                 dates.push(date);
-            }
-            
-            // 計算需要補充的下個月天數
-            const totalDays = dates.length;
-            const remainingDays = 7 - (totalDays % 7);
-            if (remainingDays < 7) {
-                const nextMonthStart = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 1);
-                for (let i = 0; i < remainingDays; i++) {
-                    const date = new Date(nextMonthStart);
-                    date.setDate(i + 1);
-                    dates.push(date);
-                }
             }
         } else if (this.currentView === 'year') {
             // 年視圖：返回一整年的日期
@@ -689,34 +665,137 @@ class CalendarView {
         // 清空並更新標題
         this.updateViewTitle();
         
-        // 獲取所有月份標題元素（包括date-header和month-header）
+        // 清空月份標題
         const headerCells = calendarHeader.querySelectorAll('span');
-        headerCells[0].textContent = ''; // 第一個格子保持空白
-        
-        // 獲取所有月份
-        const months = this.getMonthsInYear();
-        
-        // 更新月份名稱，確保顯示全部12個月
-        months.forEach((month, index) => {
-            // 確保索引+1不超過headerCells的範圍
-            if (index + 1 < headerCells.length) {
-                const headerCell = headerCells[index + 1];
-                
-                // 移除之前的日期類
-                headerCell.classList.remove('date-header');
-                headerCell.classList.add('month-header');
-                
-                const monthName = this.formatDate(month, 'monthShort');
-                headerCell.innerHTML = `<div class="month-name">${monthName}</div>`;
-            } else {
-                console.warn(`缺少第 ${index + 1} 個月的標題元素`);
-            }
+        headerCells.forEach(cell => {
+            cell.textContent = '';
+            cell.style.display = 'none';
         });
         
-        // 渲染習慣行
+        // 獲取今天的日期
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // 獲取一整年的日期
+        const year = this.viewingYear;
+        const allDatesInYear = this.getDatesInYear(year);
+        
+        // 為每個習慣創建對應的行
         for (const [habitId, habit] of Object.entries(this.storage.habits)) {
             const row = document.createElement('div');
             row.className = 'habit-row year-view';
+            
+            // 習慣名稱和編輯按鈕
+            const nameContainer = document.createElement('div');
+            nameContainer.className = 'habit-name-container';
+            
+            const nameText = document.createElement('div');
+            nameText.className = 'habit-name-text';
+            nameText.textContent = habit.name;
+            
+            // 添加連續天數指示器
+            const currentStreak = this.storage.getCurrentStreak(habitId);
+            if (currentStreak > 0) {
+                const streakIndicator = document.createElement('div');
+                streakIndicator.className = 'streak-indicator';
+                streakIndicator.textContent = `🔥 ${currentStreak}`;
+                streakIndicator.title = getCurrentLang() === 'zh' 
+                    ? `已連續${currentStreak}天` 
+                    : `${currentStreak} day streak`;
+                nameText.appendChild(streakIndicator);
+            }
+            
+            const editBtn = document.createElement('button');
+            editBtn.className = 'edit-btn';
+            editBtn.textContent = getText('editBtn') || getText('deleteBtn');
+            editBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.showEditForm(habitId);
+            });
+            
+            nameContainer.appendChild(nameText);
+            nameContainer.appendChild(editBtn);
+            row.appendChild(nameContainer);
+            
+            // 創建日期格子容器
+            const daysGrid = document.createElement('div');
+            daysGrid.className = 'year-days-grid';
+            
+            // 添加日期格子
+            allDatesInYear.forEach(date => {
+                const cell = document.createElement('div');
+                cell.className = 'habit-cell';
+                
+                // 檢查是否為今天
+                if (date.getFullYear() === today.getFullYear() && 
+                    date.getMonth() === today.getMonth() && 
+                    date.getDate() === today.getDate()) {
+                    cell.classList.add('today');
+                }
+                
+                // 設置完成狀態
+                const isCompleted = this.storage.isHabitCompletedOnDate(habitId, date);
+                cell.classList.add(isCompleted ? 'completed' : 'not-completed');
+                
+                // 檢查是否為未來日期
+                const isFuture = this.isFutureDate(date);
+                if (isFuture) {
+                    cell.classList.add('future-date');
+                } else {
+                    // 添加單擊事件（僅過去和當前日期可點擊）
+                    cell.addEventListener('click', () => {
+                        const streakDays = this.storage.toggleHabitCompletion(habitId, date);
+                        if (streakDays) {
+                            this.showStreakDialog(streakDays, habitId);
+                        }
+                        this.render();
+                    });
+                }
+                
+                daysGrid.appendChild(cell);
+            });
+            
+            row.appendChild(daysGrid);
+            habitGrid.appendChild(row);
+        }
+    }
+
+    render() {
+        const habitGrid = document.getElementById('habitGrid');
+        const calendarHeader = document.querySelector('.calendar-header');
+        
+        // 清空網格內容
+        habitGrid.innerHTML = '';
+        
+        // 根據當前視圖渲染
+        if (this.currentView === 'year') {
+            this.renderYearView(habitGrid, calendarHeader);
+            return;
+        }
+        
+        // 設置視圖類別
+        const isMonthView = this.currentView === 'month';
+        const isWeekView = this.currentView === 'week';
+        calendarHeader.classList.toggle('month-view', isMonthView);
+        calendarHeader.classList.toggle('week-view', isWeekView);
+        calendarHeader.classList.toggle('year-view', false);
+        
+        const dates = this.getDates();
+        
+        // 更新視圖標題
+        this.updateViewTitle();
+        
+        // 設置每行顯示的日期數量
+        const datesPerRow = isMonthView ? 15 : 7;
+        
+        // 獲取今天的日期
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // 為每個習慣創建對應的行
+        for (const [habitId, habit] of Object.entries(this.storage.habits)) {
+            const row = document.createElement('div');
+            row.className = `habit-row${isMonthView ? ' month-view' : ' week-view'}`;
             
             // 習慣名稱和編輯按鈕
             const nameContainer = document.createElement('div');
@@ -750,216 +829,51 @@ class CalendarView {
             nameContainer.appendChild(editBtn);
             row.appendChild(nameContainer);
             
-            // 按月分組渲染日期格子
-            const year = this.viewingYear; // 使用正在瀏覽的年份
-            for (let month = 0; month < 12; month++) {
-                // 獲取當月的所有日期
-                const datesInMonth = this.getDatesInMonth(year, month);
-                
-                // 計算這個月的第一天是星期幾
-                const firstDay = new Date(year, month, 1).getDay();
-                
-                // 為這個月創建一個日期網格
-                const monthContainer = document.createElement('div');
-                monthContainer.className = 'month-container';
-                monthContainer.dataset.month = month + 1; // 添加月份數據屬性方便調試
-                
-                // 當月日期格子容器
-                const daysGrid = document.createElement('div');
-                daysGrid.className = 'days-grid';
-                
-                // 添加前導空白格子
-                for (let i = 0; i < firstDay; i++) {
-                    const emptyCell = document.createElement('div');
-                    emptyCell.style.visibility = 'hidden';
-                    daysGrid.appendChild(emptyCell);
-                }
-                
-                // 添加日期格子
-                datesInMonth.forEach(date => {
-                    const cell = document.createElement('div');
-                    cell.className = 'habit-cell';
-                    
-                    // 設置完成狀態
-                    const isCompleted = this.storage.isHabitCompletedOnDate(habitId, date);
-                    cell.classList.add(isCompleted ? 'completed' : 'not-completed');
-                    
-                    // 檢查是否為未來日期
-                    const isFuture = this.isFutureDate(date);
-                    if (isFuture) {
-                        cell.classList.add('future-date');
-                    } else {
-                        // 添加單擊事件（僅過去和當前日期可點擊）
-                        cell.addEventListener('click', () => {
-                            const streakDays = this.storage.toggleHabitCompletion(habitId, date);
-                            if (streakDays) {
-                                this.showStreakDialog(streakDays, habitId);
-                            }
-                            this.render();
-                        });
-                    }
-                    
-                    daysGrid.appendChild(cell);
-                });
-                
-                // 將日期網格添加到月份容器
-                monthContainer.appendChild(daysGrid);
-                
-                // 將月份容器添加到行中
-                row.appendChild(monthContainer);
-            }
+            // 創建日期格子容器
+            const cellsContainer = document.createElement('div');
+            cellsContainer.className = 'habit-cells-container';
             
-            habitGrid.appendChild(row);
-        }
-    }
-
-    render() {
-        const habitGrid = document.getElementById('habitGrid');
-        const calendarHeader = document.querySelector('.calendar-header');
-        
-        // 清空網格內容
-        habitGrid.innerHTML = '';
-        
-        // 根據當前視圖渲染
-        if (this.currentView === 'year') {
-            this.renderYearView(habitGrid, calendarHeader);
-            return;
-        }
-        
-        // 設置視圖類別
-        const isMonthView = this.currentView === 'month';
-        calendarHeader.classList.toggle('month-view', isMonthView);
-        calendarHeader.classList.toggle('year-view', false);
-        
-        // 重置日期標題元素的類別
-        const headerElements = calendarHeader.querySelectorAll('span');
-        headerElements.forEach((element, index) => {
-            if (index === 0) return; // 跳過第一個空白元素
-            
-            // 重置為date-header並恢復內部結構
-            if (!element.classList.contains('date-header')) {
-                element.classList.remove('month-header');
-                element.classList.add('date-header');
+            // 添加日期格子
+            dates.forEach(date => {
+                const cell = document.createElement('div');
+                cell.className = 'habit-cell';
                 
-                // 確保內部結構正確
-                if (!element.querySelector('.date')) {
-                    element.innerHTML = `
-                        <div class="date"></div>
-                        <div class="weekday"></div>
-                    `;
+                // 檢查是否為今天
+                if (date.getFullYear() === today.getFullYear() && 
+                    date.getMonth() === today.getMonth() && 
+                    date.getDate() === today.getDate()) {
+                    cell.classList.add('today');
                 }
-            }
-        });
-        
-        const dates = this.getDates();
-        
-        // 更新視圖標題
-        this.updateViewTitle();
-        
-        // 更新日曆頭部的日期
-        const headerCells = document.querySelectorAll('.date-header');
-        dates.slice(0, 7).forEach((date, index) => {
-            const formattedDate = this.formatDate(date);
-            if (index < headerCells.length) {
-                const headerCell = headerCells[index];
-                const dateElement = headerCell.querySelector('.date');
-                const weekdayElement = headerCell.querySelector('.weekday');
                 
-                if (dateElement && weekdayElement) {
-                    dateElement.textContent = getCurrentLang() === 'zh' 
-                        ? formattedDate.day + '日' 
-                        : formattedDate.day;
-                    weekdayElement.textContent = formattedDate.weekDay;
-                }
-            }
-        });
-        
-        // 計算需要顯示幾週
-        const weeks = Math.ceil(dates.length / 7);
-        
-        // 為每個習慣創建對應週數的行
-        for (const [habitId, habit] of Object.entries(this.storage.habits)) {
-            for (let week = 0; week < (isMonthView ? weeks : 1); week++) {
-                const row = document.createElement('div');
-                row.className = `habit-row${isMonthView ? ' month-view' : ''}`;
+                // 添加日期數字
+                const dateNumber = document.createElement('div');
+                dateNumber.className = 'date-number';
+                dateNumber.textContent = date.getDate();
+                cell.appendChild(dateNumber);
                 
-                // 習慣名稱和編輯按鈕（只在第一週顯示）
-                const nameContainer = document.createElement('div');
-                nameContainer.className = 'habit-name-container';
+                // 設置完成狀態
+                const isCompleted = this.storage.isHabitCompletedOnDate(habitId, date);
+                cell.classList.add(isCompleted ? 'completed' : 'not-completed');
                 
-                if (week === 0) {
-                    const nameText = document.createElement('div');
-                    nameText.className = 'habit-name-text';
-                    nameText.textContent = habit.name;
-                    
-                    // 添加連續天數指示器
-                    const currentStreak = this.storage.getCurrentStreak(habitId);
-                    if (currentStreak > 0) {
-                        const streakIndicator = document.createElement('div');
-                        streakIndicator.className = 'streak-indicator';
-                        streakIndicator.textContent = `🔥 ${currentStreak}`;
-                        streakIndicator.title = getCurrentLang() === 'zh' 
-                            ? `已連續${currentStreak}天` 
-                            : `${currentStreak} day streak`;
-                        nameText.appendChild(streakIndicator);
-                    }
-                    
-                    const editBtn = document.createElement('button');
-                    editBtn.className = 'edit-btn';
-                    editBtn.textContent = getText('editBtn') || getText('deleteBtn'); // 兼容舊版本
-                    editBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        this.showEditForm(habitId);
+                // 檢查是否為未來日期
+                const isFuture = this.isFutureDate(date);
+                if (isFuture) {
+                    cell.classList.add('future-date');
+                } else {
+                    cell.addEventListener('click', () => {
+                        const streakDays = this.storage.toggleHabitCompletion(habitId, date);
+                        if (streakDays) {
+                            this.showStreakDialog(streakDays, habitId);
+                        }
+                        this.render();
                     });
-                    
-                    nameContainer.appendChild(nameText);
-                    nameContainer.appendChild(editBtn);
                 }
-                row.appendChild(nameContainer);
                 
-                // 該週的日期格子
-                const weekDates = dates.slice(week * 7, (week + 1) * 7);
-                weekDates.forEach(date => {
-                    const cell = document.createElement('div');
-                    cell.className = 'habit-cell';
-                    
-                    // 添加日期數字（月視圖才顯示）
-                    if (isMonthView) {
-                        const dateNumber = document.createElement('div');
-                        dateNumber.className = 'date-number';
-                        dateNumber.textContent = date.getDate();
-                        cell.appendChild(dateNumber);
-                    }
-                    
-                    // 設置完成狀態
-                    const isCompleted = this.storage.isHabitCompletedOnDate(habitId, date);
-                    cell.classList.add(isCompleted ? 'completed' : 'not-completed');
-                    
-                    // 如果是非當月日期，添加特殊樣式
-                    if (isMonthView && date.getMonth() !== this.currentDate.getMonth()) {
-                        cell.style.opacity = '0.5';
-                    }
-                    
-                    // 檢查是否為未來日期
-                    const isFuture = this.isFutureDate(date);
-                    if (isFuture) {
-                        cell.classList.add('future-date');
-                    } else {
-                        // 只有非未來日期可以點擊
-                        cell.addEventListener('click', () => {
-                            const streakDays = this.storage.toggleHabitCompletion(habitId, date);
-                            if (streakDays) {
-                                this.showStreakDialog(streakDays, habitId);
-                            }
-                            this.render();
-                        });
-                    }
-                    
-                    row.appendChild(cell);
-                });
-                
-                habitGrid.appendChild(row);
-            }
+                cellsContainer.appendChild(cell);
+            });
+            
+            row.appendChild(cellsContainer);
+            habitGrid.appendChild(row);
         }
     }
 
